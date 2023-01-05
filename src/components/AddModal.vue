@@ -27,9 +27,11 @@
                 sm="6"
               >
                 <v-select
-                  :items="['BTC', 'LTC', 'BNB', 'ETH']"
+                  :items="coinList"
                   label="Currency"
-                  v-model="transaction.name"
+                  tem-text="symbol"
+                  item-value="symbol"
+                  v-model="transaction.symbol"
                   required
                 ></v-select>
               </v-col>
@@ -63,6 +65,7 @@
                       label="Picker without buttons"
                       prepend-icon="mdi-calendar"
                       readonly
+                      required
                       v-bind="attrs"
                       v-on="on"
                     ></v-text-field>
@@ -95,13 +98,12 @@
           >
             Close
           </v-btn>
-          <v-btn
+          <button
             color="blue darken-1"
-            text
-            @click="addTransaction()"
+            @click.prevent="addTransaction()"
           >
             Save
-          </v-btn>
+          </button>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -109,26 +111,41 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex'
+
 export default {
   name: 'AddModal',
   data: () => ({
     dialog: false,
     datepicker: false,
     transaction: {
-      id: Math.random().toString(36).substr(2, 9),
       date: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10),
       type: '',
-      name: '',
+      symbol: '',
       amount: 0,
       price: 0
     },
     types: ['Sell', 'Buy']
   }),
-  methods: {
-    addTransaction () {
-      console.log('transaction to be saved', this.transaction)
-      // TODO add transaction to state
+  computed: {
+    coinList () {
+      return this.$store.getters.getCoinList
     }
+  },
+  methods: {
+    ...mapActions({
+      getCoinList: 'getCoinList',
+      addTransactionToList: 'addTransaction'
+    }),
+    addTransaction () {
+      this.transaction.id = Math.random().toString(16).slice(2)
+      this.addTransactionToList(this.transaction)
+      this.dialog = false
+      this.transaction = Object.keys(this.transaction)
+    }
+  },
+  mounted () {
+    this.getCoinList()
   }
 }
 </script>
